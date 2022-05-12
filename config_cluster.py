@@ -133,12 +133,12 @@ def run_all():
     for i in range(9)[1:]:
         reset_all()
         start_cluster_by_option(i)
+        configure_new_single_memory()
         run_test(i)
 
 
-if __name__ == "__main__":
-    get_servers_ip()
-    configure_cluster()
-    reset_all()
-    start_cluster_by_option(1)
-    configure_new_single_memory()
+get_servers_ip()
+reset_all()
+start_cluster_by_option(1)
+configure_new_single_memory()
+run_test(1)
