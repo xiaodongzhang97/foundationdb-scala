@@ -103,6 +103,8 @@ def get_servers_ip():
         servers[items[0]].append(items[1])
     
 if __name__ == "__main__":
+    get_servers_ip()
     configure_cluster()
     reset_all()
     start_cluster_by_option(1)
+    configure_new_single_memory()
