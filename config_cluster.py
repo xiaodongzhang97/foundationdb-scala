@@ -21,7 +21,7 @@ def initial_storage(conn):
     remote_run(conn, "sudo service foundationdb stop")     
     remote_run(conn, "bash mount64.sh")
     remote_run(conn, "sudo bash restore.sh")
-    config_file = read_config_file("storage-foundationdb.conf")
+    config_file = read_config_file("storage-foundationdb.conf").replace("$ID", "\$ID")
     remote_run(conn, f""" sudo sh -c "echo '{config_file}' > /etc/foundationdb/foundationdb.conf" """)
 
 
@@ -29,7 +29,7 @@ def initial_others(conn, config_file_name):
     remote_run(conn, "sudo service foundationdb stop")     
     remote_run(conn, "bash mount32.sh")
     remote_run(conn, "sudo bash restore.sh")
-    config_file = read_config_file(config_file_name)
+    config_file = read_config_file(config_file_name).replace("$ID", "\$ID")
     remote_run(conn, f""" sudo sh -c "echo '{config_file}' > /etc/foundationdb/foundationdb.conf" """)
 
 
