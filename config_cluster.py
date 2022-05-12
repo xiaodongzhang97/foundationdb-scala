@@ -101,7 +101,41 @@ def get_servers_ip():
     for line in servers_file.readlines():
         items = line.split(" ")
         servers[items[0]].append(items[1])
+
+
+def run_test(option):
+    scripts = f"""testTitle=PopulateTPCCTest
+testName=PopulateTPCC
+clientsUsed=1
+actorsPerClient=2
+warehousesPerActor={8*option}
+timeout=3600000
+clearAfterTest=false
+runConsistencyCheck=false
+
+testTitle=TPCCTest
+testName=TPCC
+warehousesNum={16*option}
+clientProcessesUsed={8*option}
+clientsUsed={48*option}
+testDuration=100
+warmupTime=20
+expectedTransactionsPerMinute=1
+timeout=14400""" + "\n" 
     
+    with fabric.Connection(servers["storage"][0], user="ubuntu") as conn:
+        remote_run(conn, f"echo $'{scripts}' > TPCC.txt")
+        remote_run(conn, "mkdir results")
+        remote_run(conn, f"sudo fdbserver -f TPCC.txt -r multitest | tee -a results/{option}.res")
+
+
+def run_all():
+    for i in range(9)[1:]:
+        reset_all()
+        start_cluster_by_option(i)
+        run_test(i)
+
+
 if __name__ == "__main__":
     get_servers_ip()
     configure_cluster()
