@@ -22,7 +22,7 @@ def initial_storage(conn):
     remote_run(conn, "bash mount64.sh")
     remote_run(conn, "sudo bash restore.sh")
     config_file = read_config_file("storage-foundationdb.conf")
-    remote_run(conn, f"echo $'{config_file}' > /etc/foundationdb/foundationdb.conf")
+    remote_run(conn, f"sudo echo $'{config_file}' > /etc/foundationdb/foundationdb.conf")
 
 
 def initial_others(conn, config_file_name):
@@ -30,7 +30,7 @@ def initial_others(conn, config_file_name):
     remote_run(conn, "bash mount32.sh")
     remote_run(conn, "sudo bash restore.sh")
     config_file = read_config_file(config_file_name)
-    remote_run(conn, f"echo $'{config_file}' > /etc/foundationdb/foundationdb.conf")
+    remote_run(conn, f"sudo echo $'{config_file}' > /etc/foundationdb/foundationdb.conf")
 
 
 def configure_cluster():
@@ -47,23 +47,23 @@ def configure_cluster():
             continue
         with fabric.Connection(storage, user="ubuntu") as conn:
             initial_storage(conn)
-            remote_run(conn, f"echo '{fdb_cluster}' > /etc/foundationdb/fdb.cluster")
+            remote_run(conn, f"sudo echo '{fdb_cluster}' > /etc/foundationdb/fdb.cluster")
     
     for lp in servers["lp"]:
         with fabric.Connection(lp, user="ubuntu") as conn:
-            initial_others(conn, "lp-foundationdb.config")
-            remote_run(conn, f"echo '{fdb_cluster}' > /etc/foundationdb/fdb.cluster")
+            initial_others(conn, "lp-foundationdb.conf")
+            remote_run(conn, f"sudo echo '{fdb_cluster}' > /etc/foundationdb/fdb.cluster")
 
 
     for client in servers["client"]:
         with fabric.Connection(client, user="ubuntu") as conn:
-            initial_others(conn, "client-foundationdb.config")
-            remote_run(conn, f"echo '{fdb_cluster}' > /etc/foundationdb/fdb.cluster")
+            initial_others(conn, "client-foundationdb.conf")
+            remote_run(conn, f"sudo echo '{fdb_cluster}' > /etc/foundationdb/fdb.cluster")
 
     for other in servers["other"]:
         with fabric.Connection(other, user="ubuntu") as conn:
-            initial_others(conn, "other-foundationdb.config")
-            remote_run(conn, f"echo '{fdb_cluster}' > /etc/foundationdb/fdb.cluster")
+            initial_others(conn, "other-foundationdb.conf")
+            remote_run(conn, f"sudo echo '{fdb_cluster}' > /etc/foundationdb/fdb.cluster")
 
     
 
