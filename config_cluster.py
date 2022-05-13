@@ -137,6 +137,13 @@ def run_all():
         run_test(i)
 
 
+def umount_all():
+    for type in servers:
+        for ip in servers[type]:
+            with fabric.Connection(ip, user="ubuntu") as conn:
+                remote_run(conn, "sudo service foundationdb stop")
+                remote_run(conn, "bash umount.sh")
+
 get_servers_ip()
 reset_all()
 start_cluster_by_option(1)
