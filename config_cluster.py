@@ -94,11 +94,12 @@ def configure_new_single_memory(option):
     master = servers["storage"][0]
     with fabric.Connection(master, user="ubuntu") as conn:
         remote_run(conn, 'fdbcli --exec "configure new single memory"')
-    time.sleep(60)
+    time.sleep(30)
     master = servers["storage"][0]
     with fabric.Connection(master, user="ubuntu") as conn:
         remote_run(conn, f'fdbcli --exec "configure proxies={4*option}"')
         remote_run(conn, f'fdbcli --exec "configure logs={4*option}"')
+    time.sleep(30)
 
 def get_servers_ip():
     servers_file = open("servers.ip", "r")
@@ -121,7 +122,7 @@ testTitle=TPCCTest
 testName=TPCC
 warehousesNum={16*option}
 clientProcessesUsed={8*option}
-clientsUsed={48*option}
+clientsUsed={32*option}
 testDuration=100
 warmupTime=20
 expectedTransactionsPerMinute=1
