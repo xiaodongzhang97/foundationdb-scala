@@ -89,17 +89,16 @@ def start_cluster_by_option(option):
         for type in servers:
             if i < len(servers[type]):
                 start(servers[type][i])
-    time.sleep(10)
-    master = servers["storage"][0]
-    with fabric.Connection(master, user="ubuntu") as conn:
-        remote_run(conn, f'fdbcli --exec "configure proxies={4*i}"')
-        remote_run(conn, f'fdbcli --exec "configure logs={4*i}"')
 
-def configure_new_single_memory():
+def configure_new_single_memory(option):
     master = servers["storage"][0]
     with fabric.Connection(master, user="ubuntu") as conn:
         remote_run(conn, 'fdbcli --exec "configure new single memory"')
     time.sleep(60)
+    master = servers["storage"][0]
+    with fabric.Connection(master, user="ubuntu") as conn:
+        remote_run(conn, f'fdbcli --exec "configure proxies={4*option}"')
+        remote_run(conn, f'fdbcli --exec "configure logs={4*option}"')
 
 def get_servers_ip():
     servers_file = open("servers.ip", "r")
@@ -152,5 +151,5 @@ def umount_all():
 get_servers_ip()
 reset_all()
 start_cluster_by_option(1)
-configure_new_single_memory()
+configure_new_single_memory(1)
 run_test(1)
