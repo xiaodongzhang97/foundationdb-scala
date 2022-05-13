@@ -151,6 +151,15 @@ def umount_all():
                 remote_run(conn, "sudo service foundationdb stop")
                 remote_run(conn, "bash umount.sh")
 
+def update_config_file():
+    for client in servers["client"]:
+        with fabric.Connection(client, user="ubuntu") as conn:
+            remote_run(conn, "sudo service foundationdb stop")     
+            config_file = read_config_file("client-foundationdb.conf").replace("$ID", "\$ID")
+            remote_run(conn, f""" sudo sh -c "echo '{config_file}' > /etc/foundationdb/foundationdb.conf" """)
+            remote_run(conn, "sudo service foundationdb start") 
+
+
 get_servers_ip()
 #reset_all()
 #start_cluster_by_option(3)
