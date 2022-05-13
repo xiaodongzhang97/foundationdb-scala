@@ -138,7 +138,7 @@ def run_all():
     for i in range(9)[1:]:
         reset_all()
         start_cluster_by_option(i)
-        configure_new_single_memory()
+        configure_new_single_memory(i)
         run_test(i)
 
 
@@ -150,7 +150,7 @@ def umount_all():
                 remote_run(conn, "bash umount.sh")
 
 get_servers_ip()
-reset_all()
-start_cluster_by_option(1)
-configure_new_single_memory(1)
-run_test(1)
+#reset_all()
+#start_cluster_by_option(3)
+#configure_new_single_memory(3)
+run_test(3)
