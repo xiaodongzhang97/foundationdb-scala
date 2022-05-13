@@ -158,13 +158,6 @@ def update_config_file():
             config_file = read_config_file("client-foundationdb.conf").replace("$ID", "\$ID")
             remote_run(conn, f""" sudo sh -c "echo '{config_file}' > /etc/foundationdb/foundationdb.conf" """)
             remote_run(conn, "sudo service foundationdb start") 
-    
-    for storage in servers["storage"]:
-        with fabric.Connection(storage, user="ubuntu") as conn:
-            remote_run(conn, "sudo service foundationdb stop")     
-            config_file = read_config_file("storage-foundationdb.conf").replace("$ID", "\$ID")
-            remote_run(conn, f""" sudo sh -c "echo '{config_file}' > /etc/foundationdb/foundationdb.conf" """)
-            remote_run(conn, "sudo service foundationdb start") 
 
 
 get_servers_ip()
