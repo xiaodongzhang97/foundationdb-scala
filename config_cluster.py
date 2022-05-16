@@ -111,7 +111,8 @@ def get_servers_ip():
 
 
 def run_test(option):
-    scripts = f"""testTitle=PopulateTPCCTest
+    populate_scripts = f"""
+testTitle=PopulateTPCCTest
 testName=PopulateTPCC
 clientsUsed=1
 actorsPerClient=2
@@ -119,21 +120,26 @@ warehousesPerActor={8*option}
 timeout=3600000
 clearAfterTest=false
 runConsistencyCheck=false
-
+    """
+    with fabric.Connection(servers["storage"][0], user="ubuntu") as conn:
+        remote_run(conn, f"echo $'{populate_scripts}' > TPCC-Populate.txt")
+        remote_run(conn, f"sudo fdbserver -f TPCC-Populate.txt -r multitest")
+        for rp in [0, 1, 5]:
+            scripts = f"""
 testTitle=TPCCTest
 testName=TPCC
 warehousesNum={16*option}
 clientProcessesUsed={8*option}
-clientsUsed={32*option}
+clientsUsed={48*option}
+remoteProbability={rp}
 testDuration=240
 warmupTime=60
 expectedTransactionsPerMinute=1
 timeout=14400""" + "\n" 
     
-    with fabric.Connection(servers["storage"][0], user="ubuntu") as conn:
-        remote_run(conn, f"echo $'{scripts}' > TPCC.txt")
-        remote_run(conn, "mkdir results")
-        remote_run(conn, f"sudo fdbserver -f TPCC.txt -r multitest | tee -a results/{option}.res")
+            remote_run(conn, f"echo $'{scripts}' > TPCC.txt")
+            remote_run(conn, f"mkdir results-{rp}")
+            remote_run(conn, f"sudo fdbserver -f TPCC.txt -r multitest | tee -a results-{rp}/{option}.res")
 
 
 def run_all():
