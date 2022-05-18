@@ -97,8 +97,8 @@ def configure_new_single_memory(option):
     time.sleep(30)
     master = servers["storage"][0]
     with fabric.Connection(master, user="ubuntu") as conn:
-        remote_run(conn, f'fdbcli --exec "configure proxies={3*option}"')
-        remote_run(conn, f'fdbcli --exec "configure logs={4*option}"')
+        remote_run(conn, f'fdbcli --exec "configure proxies={2*option}"')
+        remote_run(conn, f'fdbcli --exec "configure logs={2*option}"')
         remote_run(conn, f'fdbcli --exec "configure resolvers={option}"')
     time.sleep(30)
 
