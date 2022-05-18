@@ -124,7 +124,7 @@ runConsistencyCheck=false
     with fabric.Connection(servers["storage"][0], user="ubuntu") as conn:
         remote_run(conn, f"echo $'{populate_scripts}' > TPCC-Populate.txt")
         remote_run(conn, f"sudo fdbserver -f TPCC-Populate.txt -r multitest")
-        for rp in [0, 1, 5]:
+        for rp in [1]:
             scripts = f"""
 testTitle=TPCCTest
 testName=TPCC
