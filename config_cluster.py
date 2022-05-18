@@ -115,8 +115,8 @@ def run_test(option):
 testTitle=PopulateTPCCTest
 testName=PopulateTPCC
 clientsUsed=1
-actorsPerClient=2
-warehousesPerActor={8*option}
+actorsPerClient=8
+warehousesPerActor={2*option}
 timeout=3600000
 clearAfterTest=false
 runConsistencyCheck=false
@@ -129,11 +129,11 @@ runConsistencyCheck=false
 testTitle=TPCCTest
 testName=TPCC
 warehousesNum={16*option}
-clientProcessesUsed={8*option}
+clientProcessesUsed={14*option}
 clientsUsed={48*option}
 remoteProbability={rp}
-testDuration=240
-warmupTime=60
+testDuration=120
+warmupTime=30
 expectedTransactionsPerMinute=1
 timeout=14400""" + "\n" 
     
@@ -167,7 +167,9 @@ def update_config_file():
 
 
 get_servers_ip()
-#reset_all()
-#start_cluster_by_option(3)
-#configure_new_single_memory(3)
-run_test(3)
+umount_all()
+configure_cluster()
+reset_all()
+start_cluster_by_option(1)
+configure_new_single_memory(1)
+run_test(1)
