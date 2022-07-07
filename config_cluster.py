@@ -2,7 +2,7 @@ import fabric
 import time
 
 
-servers = {"storage": [], "lp": [], "client": [], "other": []}
+servers = {"sn": [], "db": [], "ts": []}
 
 def remote_run(conn, cmd):
     try:
@@ -21,7 +21,7 @@ def initial_storage(conn):
     remote_run(conn, "sudo service foundationdb stop")     
     remote_run(conn, "bash mount64.sh")
     remote_run(conn, "sudo bash restore.sh")
-    config_file = read_config_file("storage-foundationdb.conf").replace("$ID", "\$ID")
+    config_file = read_config_file("sn.conf").replace("$ID", "\$ID")
     remote_run(conn, f""" sudo sh -c "echo '{config_file}' > /etc/foundationdb/foundationdb.conf" """)
 
 
@@ -34,7 +34,7 @@ def initial_others(conn, config_file_name):
 
 
 def configure_cluster():
-    master = servers["storage"][0]
+    master = servers["sn"][0]
     fdb_cluster = ""
     with fabric.Connection(master, user="ubuntu") as conn:
         initial_storage(conn)
@@ -42,27 +42,21 @@ def configure_cluster():
         r = remote_run(conn, "sudo cat /etc/foundationdb/fdb.cluster")
         fdb_cluster = r.stdout
     
-    for storage in servers["storage"]:
+    for storage in servers["sn"]:
         if storage == master:
             continue
         with fabric.Connection(storage, user="ubuntu") as conn:
             initial_storage(conn)
             remote_run(conn, f""" sudo sh -c "echo '{fdb_cluster}' > /etc/foundationdb/fdb.cluster" """)
-    
-    for lp in servers["lp"]:
-        with fabric.Connection(lp, user="ubuntu") as conn:
-            initial_others(conn, "lp-foundationdb.conf")
-            remote_run(conn, f""" sudo sh -c "echo '{fdb_cluster}' > /etc/foundationdb/fdb.cluster" """)
 
-
-    for client in servers["client"]:
+    for client in servers["db"]:
         with fabric.Connection(client, user="ubuntu") as conn:
-            initial_others(conn, "client-foundationdb.conf")
+            initial_others(conn, "db.conf")
             remote_run(conn, f""" sudo sh -c "echo '{fdb_cluster}' > /etc/foundationdb/fdb.cluster" """)
 
-    for other in servers["other"]:
+    for other in servers["ts"]:
         with fabric.Connection(other, user="ubuntu") as conn:
-            initial_others(conn, "other-foundationdb.conf")
+            initial_others(conn, "ts.conf")
             remote_run(conn, f""" sudo sh -c "echo '{fdb_cluster}' > /etc/foundationdb/fdb.cluster" """)
 
     
@@ -84,22 +78,23 @@ def start(ip):
         remote_run(conn, "sudo service foundationdb start")
 
 
-def start_cluster_by_option(option):
-    for i in range(option):
-        for type in servers:
-            if i < len(servers[type]):
-                start(servers[type][i])
+def start_cluster_by_option(sn_num, db_num):
+    for i in range(sn_num):
+        start(servers["sn"][i])
+    for i in range(db_num):
+        start(servers["db"][i])
+    start(servers["ts"][0])
 
-def configure_new_single_memory(option):
-    master = servers["storage"][0]
+def configure_new_single_memory(sn_num, db_num):
+    master = servers["sn"][0]
     with fabric.Connection(master, user="ubuntu") as conn:
         remote_run(conn, 'fdbcli --exec "configure new single memory"')
     time.sleep(30)
-    master = servers["storage"][0]
+    master = servers["sn"][0]
     with fabric.Connection(master, user="ubuntu") as conn:
-        remote_run(conn, f'fdbcli --exec "configure proxies={2*option}"')
-        remote_run(conn, f'fdbcli --exec "configure logs={2*option}"')
-        remote_run(conn, f'fdbcli --exec "configure resolvers={option}"')
+        remote_run(conn, f'fdbcli --exec "configure proxies={db_num}"')
+        remote_run(conn, f'fdbcli --exec "configure logs={sn_num}"')
+        remote_run(conn, f'fdbcli --exec "configure resolvers={sn_num}"')
     time.sleep(30)
 
 
@@ -110,7 +105,7 @@ def get_servers_ip():
         servers[items[0]].append(items[1])
 
 
-def run_test(option):
+def run_tpcc(option):
     populate_scripts = f"""
 testTitle=PopulateTPCCTest
 testName=PopulateTPCC
@@ -121,7 +116,7 @@ timeout=3600000
 clearAfterTest=false
 runConsistencyCheck=false
     """
-    with fabric.Connection(servers["storage"][0], user="ubuntu") as conn:
+    with fabric.Connection(servers["sn"][0], user="ubuntu") as conn:
         remote_run(conn, f"echo $'{populate_scripts}' > TPCC-Populate.txt")
         remote_run(conn, f"sudo fdbserver -f TPCC-Populate.txt -r multitest")
         for rp in [1]:
@@ -142,12 +137,12 @@ timeout=14400""" + "\n"
             remote_run(conn, f"sudo fdbserver -f TPCC.txt -r multitest | tee -a results-{rp}/{option}.res")
 
 
-def run_all():
+def run_tpcc_scalability():
     for i in range(9)[1:]:
         reset_all()
         start_cluster_by_option(i)
         configure_new_single_memory(i)
-        run_test(i)
+        run_tpcc(i)
 
 
 def umount_all():
@@ -157,19 +152,11 @@ def umount_all():
                 remote_run(conn, "sudo service foundationdb stop")
                 remote_run(conn, "bash umount.sh")
 
-def update_config_file():
-    for client in servers["client"]:
-        with fabric.Connection(client, user="ubuntu") as conn:
-            remote_run(conn, "sudo service foundationdb stop")     
-            config_file = read_config_file("client-foundationdb.conf").replace("$ID", "\$ID")
-            remote_run(conn, f""" sudo sh -c "echo '{config_file}' > /etc/foundationdb/foundationdb.conf" """)
-            remote_run(conn, "sudo service foundationdb start") 
 
 
 get_servers_ip()
 umount_all()
 configure_cluster()
 reset_all()
-start_cluster_by_option(1)
-configure_new_single_memory(1)
-run_test(1)
+start_cluster_by_option(1,1)
+configure_new_single_memory(1,1)
