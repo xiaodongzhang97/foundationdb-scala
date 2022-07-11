@@ -1,6 +1,6 @@
 import fabric
 import time
-
+import sys
 
 servers = {"sn": [], "db": [], "ts": []}
 
@@ -17,11 +17,14 @@ def read_config_file(file):
         return f.read()
 
 
-def initial_storage(conn):
+def initial_storage(conn, cur_sn_id):
     remote_run(conn, "sudo service foundationdb stop")     
     remote_run(conn, "bash mount64.sh")
     remote_run(conn, "sudo bash restore.sh")
-    config_file = read_config_file("sn.conf").replace("$ID", "\$ID")
+    if cur_sn_id % 2 == 0:
+        config_file = read_config_file("sn.conf").replace("$ID", "\$ID")
+    else:
+        config_file = read_config_file("sn-r.conf").replace("$ID", "\$ID")
     remote_run(conn, f""" sudo sh -c "echo '{config_file}' > /etc/foundationdb/foundationdb.conf" """)
 
 
@@ -34,10 +37,12 @@ def initial_others(conn, config_file_name):
 
 
 def configure_cluster():
+    cur_sn_id = 1
     master = servers["sn"][0]
     fdb_cluster = ""
     with fabric.Connection(master, user="ubuntu") as conn:
-        initial_storage(conn)
+        initial_storage(conn, cur_sn_id)
+        cur_sn_id += 1
         remote_run(conn, "sudo python3 /usr/lib/foundationdb/make_public.py")
         r = remote_run(conn, "sudo cat /etc/foundationdb/fdb.cluster")
         fdb_cluster = r.stdout
@@ -46,7 +51,8 @@ def configure_cluster():
         if storage == master:
             continue
         with fabric.Connection(storage, user="ubuntu") as conn:
-            initial_storage(conn)
+            initial_storage(conn, cur_sn_id)
+            cur_sn_id += 1
             remote_run(conn, f""" sudo sh -c "echo '{fdb_cluster}' > /etc/foundationdb/fdb.cluster" """)
 
     for client in servers["db"]:
@@ -95,7 +101,7 @@ def configure_new_single_memory(sn_num, db_num):
         remote_run(conn, f'fdbcli --exec "configure proxies={db_num}"')
         remote_run(conn, f'fdbcli --exec "configure logs={sn_num}"')
         remote_run(conn, f'fdbcli --exec "configure resolvers={sn_num}"')
-    time.sleep(30)
+    time.sleep(10)
 
 
 def get_servers_ip():
@@ -154,9 +160,13 @@ def umount_all():
 
 
 
-get_servers_ip()
-umount_all()
-configure_cluster()
-reset_all()
-start_cluster_by_option(1,1)
-configure_new_single_memory(1,1)
+if __name__ == "__main__":
+    sn_num = int(sys.argv[1])
+    db_num = int(sys.argv[2])
+    get_servers_ip()
+    reset_all()
+    umount_all()
+    configure_cluster()
+    reset_all()
+    start_cluster_by_option(sn_num,db_num)
+    configure_new_single_memory(sn_num,db_num)
