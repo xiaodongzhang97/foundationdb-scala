@@ -94,7 +94,7 @@ def start_cluster_by_option(sn_num, db_num):
 def configure_new_single_memory(sn_num, db_num):
     master = servers["sn"][0]
     with fabric.Connection(master, user="ubuntu") as conn:
-        remote_run(conn, 'fdbcli --exec "configure new single memory"')
+        remote_run(conn, 'fdbcli --exec "configure new triple memory"')
     time.sleep(30)
     master = servers["sn"][0]
     with fabric.Connection(master, user="ubuntu") as conn:
