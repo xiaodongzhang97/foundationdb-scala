@@ -98,9 +98,9 @@ def configure_new_single_memory(sn_num, db_num):
     time.sleep(30)
     master = servers["sn"][0]
     with fabric.Connection(master, user="ubuntu") as conn:
-        remote_run(conn, f'fdbcli --exec "configure proxies={db_num}"')
+        remote_run(conn, f'fdbcli --exec "configure proxies={sn_num}"')
         remote_run(conn, f'fdbcli --exec "configure logs={sn_num}"')
-        remote_run(conn, f'fdbcli --exec "configure resolvers={sn_num}"')
+        remote_run(conn, f'fdbcli --exec "configure resolvers={int(sn_num/2)}"')
     time.sleep(10)
 
 
