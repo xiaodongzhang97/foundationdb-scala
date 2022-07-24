@@ -1,0 +1,22 @@
+testTitle=RandomReadWriteTest
+testName=ReadWrite
+testDuration=120.0
+transactionsPerSecond=100000
+writesPerTransactionA=0
+readsPerTransactionA=10
+writesPerTransactionB=5
+readsPerTransactionB=5
+; Fraction of transactions that will be of type B
+alpha=0.2
+zipf=true
+zipfConstant=0.1
+nodeCount=600000
+keyBytes=16
+valueBytes=20
+minValueBytes=20
+discardEdgeMeasurements=true
+warmingDelay=20.0
+timeout=300000.0
+databasePingDelay=300000.0
+dependentReads=true
+useRYW=true

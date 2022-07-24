@@ -1,0 +1,11 @@
+testTitle=TPCCTest
+testName=TPCC
+warehousesNum=48
+clientProcessesUsed=48
+clientsUsed=144
+remoteProbability=1
+testDuration=600
+warmupTime=100
+expectedTransactionsPerMinute=1
+timeout=14400
+
